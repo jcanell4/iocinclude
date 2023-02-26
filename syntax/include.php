@@ -21,6 +21,12 @@
 class syntax_plugin_iocinclude_include extends syntax_plugin_include_include {
 
 
+        /**
+     * Get sort order of syntax plugin.
+     *
+     * @return int The sort order.
+     */
+    function getSort() { return 302; }
 
     /**
      * Connect patterns/modes
