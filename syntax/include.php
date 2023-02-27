@@ -1,6 +1,6 @@
 <?php
 /**
- * Include Plugin: displays a wiki page within another
+ * iocinclude Plugin: displays a wiki page within another
  * Usage:
  * {{page>page}} for "page" in same namespace
  * {{page>:page}} for "page" in top namespace
@@ -18,15 +18,31 @@
  * All DokuWiki plugins to extend the parser/rendering mechanism
  * need to inherit from this class
  */
-class syntax_plugin_iocinclude_include extends syntax_plugin_include_include {
+class syntax_plugin_iocinclude_include extends DokuWiki_Syntax_Plugin {
 
+    /** @var $helper helper_plugin_iocinclude */
+    var $helper = null;
 
-        /**
+    /**
+     * Get syntax plugin type.
+     *
+     * @return string The plugin type.
+     */
+    function getType() { return 'substition'; }
+
+    /**
      * Get sort order of syntax plugin.
      *
      * @return int The sort order.
      */
     function getSort() { return 302; }
+
+    /**
+     * Get paragraph type.
+     *
+     * @return string The paragraph type.
+     */
+    function getPType() { return 'block'; }
 
     /**
      * Connect patterns/modes
@@ -85,28 +101,28 @@ class syntax_plugin_iocinclude_include extends syntax_plugin_include_include {
             $this->helper = plugin_load('helper', 'iocinclude');
         $flags = $this->helper->get_flags($flags);
 
-        $pages = $this->helper->_get_included_pages($mode, $page, $sect, $parent_id, $flags);
+        $pages = $this->helper->_get_iocincluded_pages($mode, $page, $sect, $parent_id, $flags);
 
         if ($format == 'metadata') {
             /** @var Doku_Renderer_metadata $renderer */
 
-            // remove old persistent metadata of previous versions of the include plugin
-            if (isset($renderer->persistent['plugin_include'])) {
-                unset($renderer->persistent['plugin_include']);
-                unset($renderer->meta['plugin_include']);
+            // remove old persistent metadata of previous versions of the iocinclude plugin
+            if (isset($renderer->persistent['plugin_iocinclude'])) {
+                unset($renderer->persistent['plugin_iocinclude']);
+                unset($renderer->meta['plugin_iocinclude']);
             }
 
-            $renderer->meta['plugin_include']['instructions'][] = compact('mode', 'page', 'sect', 'parent_id', 'flags');
-            if (!isset($renderer->meta['plugin_include']['pages']))
-               $renderer->meta['plugin_include']['pages'] = array(); // add an array for array_merge
-            $renderer->meta['plugin_include']['pages'] = array_merge($renderer->meta['plugin_include']['pages'], $pages);
-            $renderer->meta['plugin_include']['include_content'] = isset($_REQUEST['include_content']);
+            $renderer->meta['plugin_iocinclude']['instructions'][] = compact('mode', 'page', 'sect', 'parent_id', 'flags');
+            if (!isset($renderer->meta['plugin_iocinclude']['pages']))
+               $renderer->meta['plugin_iocinclude']['pages'] = array(); // add an array for array_merge
+            $renderer->meta['plugin_iocinclude']['pages'] = array_merge($renderer->meta['plugin_iocinclude']['pages'], $pages);
+            $renderer->meta['plugin_iocinclude']['include_content'] = isset($_REQUEST['include_content']);
         }
 
         $secids = array();
-        if ($format == 'xhtml' || $format == 'odt' || $format == 'wikiiocmodel_psdom') {
-//        if ($format == 'xhtml' || $format == 'odt') {
-            $secids = p_get_metadata($ID, 'plugin_include secids');
+        if ($format == 'xhtml' || $format == 'odt' 
+                    || $format == 'wikiiocmodel_psdom' || $format == 'wikiiocmodel_ptxhtml') {
+            $secids = p_get_metadata($ID, 'plugin_iocinclude secids');
         }
 
         foreach ($pages as $page) {
@@ -121,8 +137,8 @@ class syntax_plugin_iocinclude_include extends syntax_plugin_include_include {
             if ($format == 'metadata') {
                 $renderer->meta['relation']['references'][$id] = $exists;
                 $renderer->meta['relation']['haspart'][$id]    = $exists;
-                if (!$sect && !$flags['firstsec'] && !$flags['linkonly'] && !isset($renderer->meta['plugin_include']['secids'][$id])) {
-                    $renderer->meta['plugin_include']['secids'][$id] = array('hid' => 'plugin_include__'.str_replace(':', '__', $id), 'pos' => $pos);
+                if (!$sect && !$flags['firstsec'] && !$flags['linkonly'] && !isset($renderer->meta['plugin_iocinclude']['secids'][$id])) {
+                    $renderer->meta['plugin_iocinclude']['secids'][$id] = array('hid' => 'plugin_iocinclude__'.str_replace(':', '__', $id), 'pos' => $pos);
                 }
             }
 
@@ -154,14 +170,5 @@ class syntax_plugin_iocinclude_include extends syntax_plugin_include_include {
 
         return true;
     }
-
-    // S'ha de revisar como es gestiona el GetAllowedTypes per poder utilitzar
-    // altres renderers!
-
-    //'container','substition','protected','disabled','baseonly','formatting','paragraphs'
-//    function getAllowedTypes() {
-//        return array('container','substition','protected','disabled','baseonly','formatting','paragraphs');
-//    }
-
 }
 // vim:ts=4:sw=4:et:

@@ -4,5 +4,5 @@ email  xaviergaro.dev@gmail.com
 date   2022-11-16
 name   Ace Editor configurator plugin
 desc   Ace editor configurator to overrite the pluguin
-name   include plugin with psdom support
-desc   Functions to include another page in a wiki page with psdom support
+name   iocinclude plugin with psdom support
+desc   Functions to iocinclude another page in a wiki page with psdom support
