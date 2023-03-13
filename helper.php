@@ -17,6 +17,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
     /** @var helper_plugin_tag $taghelper */
     var $taghelper = null;
     var $includes  = array(); // deprecated - compatibility code for the blog plugin
+    var $levelDiff=0;
 
     /**
      * Constructor loads default config settings once
@@ -361,7 +362,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
                         case 'data_entry':              // skip data plugin
                         case 'meta':                    // skip meta plugin
                         case 'indexmenu_tag':           // skip indexmenu sort tag
-                        case 'include_sorttag':         // skip iocinclude plugin sort tag
+                        case 'iocinclude_sorttag':         // skip iocinclude plugin sort tag
                             unset($ins[$i]);
                             break;
                         // adapt indentation level of nested includes
@@ -375,7 +376,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
                          * i.e. if there is a header which generates a section edit (depends on the levels, level
                          * adjustments, $no_header, ...)
                          */
-                        case 'include_closelastsecedit':
+                        case 'iocinclude_closelastsecedit':
                             $endpos = $ins[$i][1][1][0];
                             unset($ins[$i]);
                             break;
@@ -389,7 +390,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
         // calculate difference between header/section level and iocinclude level
         $diff = 0;
         if (!isset($lvl_max)) $lvl_max = 0; // if no level found in target, set to 0
-        $diff = $lvl - $lvl_max + 1;
+        $this->levelDiff = $diff = $lvl - $lvl_max + 1;        
         if ($no_header) $diff -= 1;  // push up one level if "noheader"
 
         // convert headers and set footer/permalink
@@ -454,7 +455,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
 
         // close last open section of the included page if there is any
         if ($contains_secedit) {
-            array_push($ins, array('plugin', array('include_closelastsecedit', array($endpos))));
+            array_push($ins, array('plugin', array('iocinclude_closelastsecedit', array($endpos))));
         }
 
         // add edit button
@@ -485,10 +486,10 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
 
         // add instructions entry wrapper
         $include_secid = (isset($flags['include_secid']) ? $flags['include_secid'] : NULL);
-        array_unshift($ins, array('plugin', array('include_wrap', array('open', $page, $flags['redirect'], $include_secid))));
+        array_unshift($ins, array('plugin', array('iocinclude_wrap', array('open', $page, $flags['redirect'], $include_secid))));
         if (isset($flags['beforeeach']))
             array_unshift($ins, array('entity', array($flags['beforeeach'])));
-        array_push($ins, array('plugin', array('include_wrap', array('close'))));
+        array_push($ins, array('plugin', array('iocinclude_wrap', array('close'))));
         if (isset($flags['aftereach']))
             array_push($ins, array('entity', array($flags['aftereach'])));
 
@@ -507,7 +508,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
     function _footer($page, $sect, $sect_title, $flags, $footer_lvl, $root_id) {
         $footer = array();
         $footer[0] = 'plugin';
-        $footer[1] = array('include_footer', array($page, $sect, $sect_title, $flags, $root_id, $footer_lvl));
+        $footer[1] = array('iocinclude_footer', array($page, $sect, $sect_title, $flags, $root_id, $footer_lvl));
         return $footer;
     }
 
@@ -520,7 +521,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
         $title = ($sect) ? $sect_title : $page;
         $editbtn = array();
         $editbtn[0] = 'plugin';
-        $editbtn[1] = array('include_editbtn', array($title));
+        $editbtn[1] = array('iocinclude_editbtn', array($title));
         $ins[] = $editbtn;
     }
 
@@ -531,7 +532,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
      */
     function _permalink(&$ins, $page, $sect, $flags) {
         $ins[0] = 'plugin';
-        $ins[1] = array('include_header', array($ins[1][0], $ins[1][1], $ins[1][2], $page, $sect, $flags));
+        $ins[1] = array('iocinclude_header', array($ins[1][0], $ins[1][1], $ins[1][2], $page, $sect, $flags));
     }
 
     /**
@@ -595,7 +596,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
                                     // the iocinclude section ids are different from normal section ids (so they won't conflict) but this
                                     // also means that the normal locallink function can't be used
                                     $ins[$i][0] = 'plugin';
-                                    $ins[$i][1] = array('include_locallink', array($included_pages[$link_id]['hid'], $ins[$i][1][1], $ins[$i][1][0]));
+                                    $ins[$i][1] = array('iocinclude_locallink', array($included_pages[$link_id]['hid'], $ins[$i][1][1], $ins[$i][1][0]));
                                 }
                             }
                         }
@@ -645,7 +646,7 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
         if(is_array($ins)) {
             $ins = array_slice($ins, $offset, $end);
             // store the end position in the include_closelastsecedit instruction so it can generate a matching button
-            $ins[] = array('plugin', array('include_closelastsecedit', array($endpos)));
+            $ins[] = array('plugin', array('iocinclude_closelastsecedit', array($endpos)));
         }
     }
 
@@ -676,11 +677,11 @@ class helper_plugin_iocinclude extends DokuWiki_Plugin { // DokuWiki_Helper_Plug
             if(($first_sect) && ($ins[$i][0] == 'section_open')) {
                 $ins = array_slice($ins, 0, $first_sect);
                 if ($flags['readmore']) {
-                    $ins[] = array('plugin', array('include_readmore', array($page)));
+                    $ins[] = array('plugin', array('iocinclude_readmore', array($page)));
                 }
                 $ins[] = array('section_close', array());
-                // store the end position in the include_closelastsecedit instruction so it can generate a matching button
-                $ins[] = array('plugin', array('include_closelastsecedit', array($endpos)));
+                // store the end position in the iocinclude_closelastsecedit instruction so it can generate a matching button
+                $ins[] = array('plugin', array('iocinclude_closelastsecedit', array($endpos)));
                 return;
             }
         }

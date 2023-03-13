@@ -149,6 +149,19 @@ class syntax_plugin_iocinclude_include extends DokuWiki_Syntax_Plugin {
             }
 
             $instructions = $this->helper->_get_instructions($id, $sect, $mode, $level, $flags, $root_id, $secids);
+            $renderer->levelDiff = $this->helper->levelDiff;
+            
+            if($format == "xhtml"){
+                $lastLevel=0;
+                $i= count($instructions)-1;
+                while($i>=0 && $instructions[$i][0]!="header"){
+                    $i--;
+                }
+                if($i>=0){
+                    $lastLevel=$instructions[$i][1][1];
+                }
+                $renderer->lastlevel = $lastLevel;
+            }
 
             if (!$flags['editbtn']) {
                 global $conf;
